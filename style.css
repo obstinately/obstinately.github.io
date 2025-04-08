@@ -1,4 +1,4 @@
-/* 기본 스타일 (body, #viewer-container, #controls 등 이전과 동일) */
+/* 기본 스타일 */
 body {
     font-family: sans-serif;
     background-color: #f0f0f0;
@@ -8,7 +8,7 @@ body {
 }
 
 #viewer-container {
-    position: relative;
+    position: relative; /* 컨트롤 오버레이 기준점 */
     width: 100%;
     height: 100%;
     display: flex;
@@ -31,16 +31,26 @@ body {
     flex-wrap: nowrap;
     justify-content: center;
     z-index: 10;
-    opacity: 0.15;
-    transition: opacity 0.3s ease-in-out;
+    opacity: 0; /* 기본 숨김 (JS 또는 hover로 표시) */
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
+
+/* JS로 컨트롤 표시 클래스 */
+#viewer-container.controls-visible #controls {
+    opacity: 0.8;
+    visibility: visible;
+}
+
+/* 데스크톱 (마우스 호버 가능) 환경 */
 @media (hover: hover) {
-    #viewer-container:hover #controls { opacity: 1; }
+    #viewer-container:hover #controls {
+        opacity: 1;
+        visibility: visible;
+    }
 }
-@media (hover: none) {
-    #controls { opacity: 0.7; }
-}
-/* 컨트롤 내부 요소 스타일 (이전과 동일) */
+
+/* 컨트롤 내부 요소 스타일 (동일) */
 #controls button { padding: 6px 12px; cursor: pointer; background-color: #444; color: white; border: 1px solid #666; border-radius: 4px; font-size: 14px; transition: background-color 0.2s; }
 #controls button:hover:not(:disabled) { background-color: #5e5e5e; }
 #controls button:disabled { cursor: not-allowed; opacity: 0.5; }
@@ -50,47 +60,32 @@ body {
 #page-num-input[type=number] { -moz-appearance: textfield; }
 
 
-/* --- 캔버스 컨테이너 및 캔버스 스타일 수정 --- */
+/* --- 캔버스 컨테이너 및 캔버스 스타일 (단순화/복원) --- */
 #canvas-container {
     width: 100%;
     height: 100%;
-    overflow: hidden; /* 중요: 캔버스가 넘칠 때 숨김 */
-    position: relative; /* 중요: 내부 absolute 캔버스의 기준점 */
-    text-align: center; /* 내부 요소 가운데 정렬 (block 요소에는 큰 영향 없음) */
+    overflow: auto; /* 줌 했을 때 스크롤 가능하도록 */
+    text-align: center; /* 캔버스 가운데 정렬에 도움 */
 }
 
-/* 두 캔버스 공통 스타일 */
-#canvas-container canvas {
-    position: absolute; /* 중요: 겹치거나 화면 밖에 배치하기 위함 */
-    top: 50%; /* 세로 중앙 정렬 시작점 */
-    left: 0;  /* 가로 위치 (JS에서 변경) */
-    transform: translateY(-50%); /* 세로 중앙 정렬 완료 */
-
+/* 단일 캔버스 스타일 */
+#pdf-canvas { /* ID 복원 */
+    display: block; /* 하단 여백 제거 */
+    margin: 20px auto; /* 상하 여백 및 가로 중앙 정렬 */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     direction: ltr;
-    max-width: calc(100% - 40px); /* 좌우 여백 확보 (가로 스크롤 방지) */
-    max-height: calc(100% - 40px); /* 상하 여백 확보 (세로 스크롤 방지) */
-    width: auto;  /* 원본 비율 유지를 위해 JS에서 설정 */
-    height: auto; /* 원본 비율 유지를 위해 JS에서 설정 */
-
-    /* --- 애니메이션 설정 --- */
-    transition: left 0.4s ease-in-out; /* left 속성 변경 시 애니메이션 */
-    opacity: 1; /* 기본적으로 보이도록 설정 */
-}
-
-/* 초기 상태: canvas-2는 화면 오른쪽에 숨김 */
-#pdf-canvas-2 {
-    left: 100%;
+    /* width, height는 JS에서 설정됨 */
+    /* max-width, max-height는 필요 시 추가 */
 }
 
 
-/* 전체 화면 시 스타일 (이전과 유사) */
+/* 전체 화면 시 스타일 (동일) */
 #viewer-container:fullscreen { background-color: #000; }
 #viewer-container:fullscreen #controls { opacity: 0.7; }
-#viewer-container:fullscreen #canvas-container canvas {
+#viewer-container:fullscreen #canvas-container { overflow: auto; }
+#viewer-container:fullscreen #pdf-canvas {
     box-shadow: none;
+    margin: auto; /* 전체화면 시 중앙 정렬 */
     max-width: 100%;
     max-height: 100%;
-    /* transform: translate(-50%, -50%); 중앙 정렬 재확인 */
-    /* top: 50%; left: 50%; transform: translate(-50%, -50%); */ /* 중앙 정렬 다른 방식 */
 }
