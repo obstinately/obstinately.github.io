@@ -1,708 +1,1306 @@
+
 <!DOCTYPE html>
+
 <html lang="ko">
+
 <head>
+
     <meta charset="utf-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>반응형 PDF 뷰어3</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <title>반응형 PDF 뷰어</title>
+
+    <!-- PDF.js 라이브러리 -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
     <style>
+
         body, html {
+
             margin: 0;
+
             padding: 0;
+
             height: 100%;
+
             width: 100%;
+
             background-color: #f0f0f0;
+
             overflow: hidden;
+
             font-family: Arial, sans-serif;
+
         }
+
         
+
         .reader-container {
+
             width: 100%;
+
             height: 100%;
+
             display: flex;
+
             flex-direction: column;
+
         }
+
         
+
         .tablet-frame {
+
             flex: 1;
+
             margin: 10px;
+
             background-color: #ffffff;
+
             border-radius: 15px;
+
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+
             overflow: hidden;
+
             position: relative;
+
             display: flex;
+
             flex-direction: column;
+
         }
+
         
+
         #pdf-container {
+
             flex: 1;
+
             overflow: auto;
+
             display: flex;
+
             flex-direction: column;
+
             align-items: center;
+
             padding: 10px;
+
             position: relative;
+
         }
+
         
+
         #pdf-viewer {
+
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
             margin-bottom: 10px;
+
             max-width: 100%;
+
         }
+
         
+
         .controls {
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
             flex-wrap: wrap;
+
             gap: 10px;
+
             padding: 10px;
+
             background-color: rgba(0, 0, 0, 0.6);
+
             border-radius: 10px;
+
             position: fixed;
+
             bottom: 30px;
+
             left: 50%;
+
             transform: translateX(-50%);
+
             transition: opacity 0.3s, visibility 0.3s;
+
             opacity: 0;
+
             visibility: hidden;
+
             z-index: 1000;
+
         }
+
         
+
         .controls.visible {
+
             opacity: 1;
+
             visibility: visible;
+
         }
+
         
+
         .btn {
+
             padding: 8px 12px;
+
             background-color: rgba(74, 144, 226, 0.9);
+
             border: none;
+
             border-radius: 5px;
+
             color: white;
+
             cursor: pointer;
+
             font-size: 14px;
+
             min-width: 40px;
+
             text-align: center;
+
         }
+
         
+
         .btn:hover {
+
             background-color: rgba(53, 122, 193, 0.9);
+
         }
+
         
+
         .btn:disabled {
+
             background-color: rgba(204, 204, 204, 0.9);
+
             cursor: not-allowed;
+
         }
+
         
+
         .zoom-controls, .page-controls {
+
             display: flex;
+
             gap: 5px;
+
             align-items: center;
+
         }
+
         
+
         #page-input {
+
             width: 50px;
+
             padding: 6px;
+
             text-align: center;
+
             border: 1px solid #ccc;
+
             border-radius: 5px;
+
             font-size: 14px;
+
             background-color: rgba(255, 255, 255, 0.8);
+
             color: #000;
+
         }
+
         
+
         #page-count {
+
             margin: 0 5px;
+
             white-space: nowrap;
+
             color: white;
+
         }
+
         
+
         /* 모바일 최적화 */
+
         @media (max-width: 768px) {
+
             .controls {
+
                 flex-wrap: wrap;
+
                 gap: 5px;
+
                 padding: 8px;
+
                 max-width: 90%;
+
             }
+
             
+
             .btn {
+
                 font-size: 12px;
+
                 padding: 6px 8px;
+
             }
+
             
+
             #page-input {
+
                 width: 40px;
+
             }
+
         }
+
         
+
         /* 로딩 스피너 */
+
         .loading {
+
             position: absolute;
+
             top: 50%;
+
             left: 50%;
+
             transform: translate(-50%, -50%);
+
             text-align: center;
+
             z-index: 100;
+
             background-color: rgba(255, 255, 255, 0.8);
+
             padding: 20px;
+
             border-radius: 10px;
+
         }
+
         
+
         .spinner {
+
             border: 5px solid #f3f3f3;
+
             border-top: 5px solid #3498db;
+
             border-radius: 50%;
+
             width: 40px;
+
             height: 40px;
+
             animation: spin 1s linear infinite;
+
             margin: 0 auto 15px auto;
+
         }
+
         
+
         @keyframes spin {
+
             0% { transform: rotate(0deg); }
+
             100% { transform: rotate(360deg); }
+
         }
+
         
+
         /* 에러 메시지 */
+
         .error-message {
+
             color: #e74c3c;
+
             font-weight: bold;
+
             margin-top: 10px;
+
         }
+
         
+
         /* 디버그 정보 */
+
         #debug-info {
+
             position: fixed;
+
             bottom: 10px;
+
             left: 10px;
+
             background: rgba(0,0,0,0.7);
+
             color: white;
+
             padding: 5px 10px;
+
             border-radius: 5px;
+
             font-size: 12px;
+
             display: none;
+
         }
+
     </style>
+
 </head>
+
 <body>
+
     <div class="reader-container">
+
         <div class="tablet-frame">
+
             <div id="pdf-container">
+
                 <canvas id="pdf-viewer"></canvas>
+
             </div>
+
             <div id="loading" class="loading">
+
                 <div class="spinner"></div>
+
                 <p>PDF 로딩 중...</p>
+
                 <div id="loading-status"></div>
+
             </div>
+
             <div class="controls">
+
                 <div class="page-controls">
+
                     <button id="first-page" class="btn" title="첫 페이지">≪</button>
+
                     <button id="prev" class="btn" title="이전 페이지">◀</button>
+
                     <input type="number" id="page-input" min="1" value="1">
+
                     <span id="page-count">/ 0</span>
+
                     <button id="next" class="btn" title="다음 페이지">▶</button>
+
                     <button id="last-page" class="btn" title="마지막 페이지">≫</button>
+
                 </div>
+
                 <div class="zoom-controls">
+
                     <button id="zoom-out" class="btn" title="축소">-</button>
+
                     <button id="zoom-reset" class="btn" title="원본 크기">100%</button>
+
                     <button id="zoom-in" class="btn" title="확대">+</button>
+
                 </div>
+
                 <button id="fullscreen" class="btn" title="전체화면">전체화면</button>
+
             </div>
+
         </div>
+
     </div>
+
     
+
     <div id="debug-info"></div>
 
+
+
     <script>
+
         // PDF.js 워커 설정
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
         
+
         // PDF 파일 경로 (실제 파일 경로로 변경 필요)
+
         // 상대 경로나 절대 경로 모두 가능합니다
+
         const pdfPath = './경기도메뉴얼-2023.pdf';
+
         
+
         // 디버그 모드 (문제 해결 시 true로 설정)
+
         const debug = false;
+
         
+
         // 변수 초기화
+
         let pdfDoc = null;
+
         let pageNum = 1;
+
         let pageRendering = false;
+
         let pageNumPending = null;
+
         let scale = 1.0;
+
         let canvas = document.getElementById('pdf-viewer');
+
         let ctx = canvas.getContext('2d');
+
         let loadingElement = document.getElementById('loading');
+
         let loadingStatus = document.getElementById('loading-status');
+
         let debugInfo = document.getElementById('debug-info');
+
         let controlsElement = document.querySelector('.controls');
+
         let controlsTimeout = null;
-        let isControlsVisible = false;
+
         
-        // 핀치 줌 관련 변수
-        let startTouchDistance = null;
-        let initialScale = null;
-        let pinchCenter = null;
-        let offsetX = 0;
-        let offsetY = 0;
-        let initialOffsetX = 0;
-        let initialOffsetY = 0;
-        
+
         if (debug) {
+
             debugInfo.style.display = 'block';
+
         }
+
         
+
         /**
+
          * 디버그 정보를 표시합니다.
+
          */
+
         function log(message) {
+
             if (debug) {
+
                 console.log(message);
+
                 debugInfo.textContent = message;
+
             }
+
         }
+
         
+
         /**
+
          * 컨트롤 오버레이를 표시하고 타이머를 설정합니다.
+
          */
+
         function showControls() {
+
             controlsElement.classList.add('visible');
-            isControlsVisible = true;
+
             
+
             // 기존 타이머 취소
+
             if (controlsTimeout) {
+
                 clearTimeout(controlsTimeout);
+
             }
+
             
+
             // 새 타이머 설정 (2.5초 후 숨김)
+
             controlsTimeout = setTimeout(hideControls, 2500);
+
         }
+
         
+
         /**
+
          * 컨트롤 오버레이를 숨깁니다.
+
          */
+
         function hideControls() {
+
             controlsElement.classList.remove('visible');
-            isControlsVisible = false;
+
         }
+
         
+
         /**
+
          * PDF 문서를 불러옵니다.
+
          */
+
         function loadPDF() {
+
             log('PDF 로딩 시작: ' + pdfPath);
+
             loadingStatus.textContent = '파일 로딩 중...';
+
             
+
             // PDF 파일 로드 옵션
+
             const loadingTask = pdfjsLib.getDocument({
+
                 url: pdfPath,
+
                 withCredentials: false,
+
                 cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/',
+
                 cMapPacked: true
+
             });
+
             
+
             loadingTask.onProgress = function(progressData) {
+
                 if (progressData.total > 0) {
+
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
+
                     loadingStatus.textContent = `로딩 중: ${percent}%`;
+
                     log(`로딩 진행: ${percent}%`);
+
                 }
+
             };
+
             
+
             loadingTask.promise.then(function(doc) {
+
                 log('PDF 로딩 성공! 페이지 수: ' + doc.numPages);
+
                 pdfDoc = doc;
+
                 document.getElementById('page-count').textContent = `/ ${pdfDoc.numPages}`;
+
                 document.getElementById('page-input').max = pdfDoc.numPages;
+
                 
+
                 // 첫 페이지 렌더링
+
                 renderPage(pageNum);
+
                 
+
                 // 로딩 표시 제거
+
                 loadingElement.style.display = 'none';
+
                 
+
                 // 입력 필드 활성화
+
                 document.getElementById('page-input').disabled = false;
+
                 
+
                 // 초기 컨트롤 표시
+
                 showControls();
+
                 
+
             }).catch(function(error) {
+
                 console.error('PDF 로딩 중 오류 발생:', error);
+
                 log('PDF 로딩 오류: ' + error.message);
+
                 
+
                 // 오류 메시지 표시
+
                 loadingElement.innerHTML = `
+
                     <p class="error-message">PDF 로딩 실패</p>
+
                     <p>다음을 확인해보세요:</p>
+
                     <ul>
+
                         <li>PDF 파일 경로가 올바른지 확인</li>
+
                         <li>PDF 파일이 같은 폴더에 있는지 확인</li>
+
                         <li>CORS 정책 문제일 수 있음 (서버 설정 필요)</li>
+
                     </ul>
+
                     <p>오류 상세: ${error.message}</p>
+
                 `;
+
             });
+
         }
+
         
+
         /**
+
          * 지정된 페이지를 렌더링합니다.
+
          */
+
         function renderPage(num) {
+
             pageRendering = true;
+
             log('페이지 렌더링 시작: ' + num);
+
             
+
             // 이전 페이지 렌더링 중인 경우 대기
+
             if (pageRendering && pageNumPending !== null) {
+
                 pageNumPending = num;
+
                 log('이전 렌더링 중, 대기 중...');
+
                 return;
+
             }
+
             
+
             // 버튼 상태 업데이트
+
             updateButtonStates();
+
             
+
             // 페이지 가져오기
+
             pdfDoc.getPage(num).then(function(page) {
+
                 log('페이지 로드 성공, 뷰포트 계산 중...');
+
                 
+
                 // 기본 뷰포트
+
                 const viewport = page.getViewport({ scale: scale });
+
                 
+
                 // 컨테이너 크기에 맞게 뷰포트 조정
+
                 const container = document.getElementById('pdf-container');
+
                 const containerWidth = container.clientWidth - 20; // 패딩 고려
+
                 
+
                 // 화면에 맞게 스케일 조정 (너무 작지 않게)
+
                 let adjustedScale = scale;
+
                 const fitScale = containerWidth / viewport.width;
+
                 
+
                 // 컨테이너보다 크면 컨테이너에 맞춤
+
                 if (viewport.width > containerWidth) {
+
                     adjustedScale = scale * fitScale;
+
                 }
+
                 
+
                 log(`조정된 스케일: ${adjustedScale} (원본: ${scale}, 컨테이너 너비: ${containerWidth}px)`);
+
                 
+
                 const adjustedViewport = page.getViewport({ scale: adjustedScale });
+
                 
+
                 // 캔버스 크기 설정
+
                 canvas.height = adjustedViewport.height;
+
                 canvas.width = adjustedViewport.width;
+
                 
-                log(`캔버스 크기 설정: <span class="math-inline">\{canvas\.width\}x</span>{canvas.height}`);
+
+                log(`캔버스 크기 설정: ${canvas.width}x${canvas.height}`);
+
                 
+
                 // 페이지 렌더링
+
                 const renderContext = {
+
                     canvasContext: ctx,
+
                     viewport: adjustedViewport
+
                 };
+
                 
+
                 const renderTask = page.render(renderContext);
+
                 
+
                 // 렌더링 완료 시 처리
+
                 renderTask.promise.then(function() {
+
                     log('페이지 렌더링 완료!');
+
                     pageRendering = false;
+
                     
+
                     // 대기 중인 페이지가 있으면 렌더링
+
                     if (pageNumPending !== null) {
+
                         log('대기 중인 페이지 렌더링: ' + pageNumPending);
+
                         renderPage(pageNumPending);
+
                         pageNumPending = null;
+
                     }
+
                 }).catch(function(error) {
+
                     console.error('페이지 렌더링 오류:', error);
+
                     log('렌더링 오류: ' + error.message);
+
                     pageRendering = false;
+
                 });
+
                 
+
                 // 입력 필드 및 카운터 업데이트
+
                 document.getElementById('page-input').value = num;
+
                 
+
                 // 버튼 상태 업데이트
+
                 updateButtonStates();
+
                 
+
                 // 컨트롤 표시
+
                 showControls();
+
                 
+
             }).catch(function(error) {
+
                 console.error('페이지 로드 오류:', error);
+
                 log('페이지 로드 오류: ' + error.message);
+
                 pageRendering = false;
+
             });
+
         }
+
         
+
         /**
+
          * 이전 페이지로 이동합니다.
+
          */
+
         function onPrevPage() {
+
             if (pageNum <= 1) return;
+
             pageNum--;
+
             log('이전 페이지로 이동: ' + pageNum);
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 다음 페이지로 이동합니다.
+
          */
+
         function onNextPage() {
+
             if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
+
             pageNum++;
+
             log('다음 페이지로 이동: ' + pageNum);
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 첫 페이지로 이동합니다.
+
          */
+
         function onFirstPage() {
+
             if (pageNum === 1) return;
+
             pageNum = 1;
+
             log('첫 페이지로 이동');
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 마지막 페이지로 이동합니다.
+
          */
+
         function onLastPage() {
+
             if (!pdfDoc || pageNum === pdfDoc.numPages) return;
+
             pageNum = pdfDoc.numPages;
+
             log('마지막 페이지로 이동: ' + pageNum);
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 확대합니다.
+
          */
+
         function onZoomIn() {
+
             scale += 0.25;
+
             log('확대: ' + scale);
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 축소합니다.
+
          */
+
         function onZoomOut() {
+
             if (scale <= 0.5) return;
+
             scale -= 0.25;
+
             log('축소: ' + scale);
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 원본 크기로 돌아갑니다.
+
          */
+
         function onZoomReset() {
+
             scale = 1.0;
+
             log('원본 크기로 재설정');
+
             renderPage(pageNum);
+
         }
+
         
+
         /**
+
          * 버튼 상태를 업데이트합니다.
+
          */
+
         function updateButtonStates() {
+
             if (!pdfDoc) return;
+
             
+
             document.getElementById('prev').disabled = pageNum <= 1;
+
             document.getElementById('first-page').disabled = pageNum <= 1;
+
             document.getElementById('next').disabled = pageNum >= pdfDoc.numPages;
+
             document.getElementById('last-page').disabled = pageNum >= pdfDoc.numPages;
+
             document.getElementById('zoom-reset').textContent = `${Math.round(scale * 100)}%`;
+
         }
+
         
+
         /**
+
          * 창 크기가 변경되면 PDF를 다시 렌더링합니다.
+
          */
+
         function handleResize() {
+
             if (pdfDoc) {
+
                 log('창 크기 변경 감지, 페이지 다시 렌더링');
+
                 renderPage(pageNum);
+
             }
+
         }
+
         
+
         // 디바운싱 함수 (연속 호출 방지)
+
         function debounce(func, wait) {
+
             let timeout;
+
             return function() {
+
                 const context = this, args = arguments;
+
                 clearTimeout(timeout);
+
                 timeout = setTimeout(() => {
+
                     func.apply(context, args);
+
                 }, wait);
+
             };
+
         }
+
         
+
         // 이벤트 리스너 설정
+
         document.getElementById('prev').addEventListener('click', onPrevPage);
+
         document.getElementById('next').addEventListener('click', onNextPage);
+
         document.getElementById('first-page').addEventListener('click', onFirstPage);
+
         document.getElementById('last-page').addEventListener('click', onLastPage);
+
         document.getElementById('zoom-in').addEventListener('click', onZoomIn);
+
         document.getElementById('zoom-out').addEventListener('click', onZoomOut);
+
         document.getElementById('zoom-reset').addEventListener('click', onZoomReset);
+
         
+
         // 페이지 입력 이벤트
+
         document.getElementById('page-input').addEventListener('change', function() {
+
             const pageInputValue = parseInt(this.value);
+
             
+
             if (!pdfDoc) return;
+
             
+
             if (pageInputValue && pageInputValue > 0 && pageInputValue <= pdfDoc.numPages) {
+
                 pageNum = pageInputValue;
+
                 log('입력된 페이지로 이동: ' + pageNum);
+
                 renderPage(pageNum);
+
             } else {
+
                 this.value = pageNum;
+
             }
+
         });
+
         
+
         // 전체화면 토글
+
         document.getElementById('fullscreen').addEventListener('click', function() {
+
             const container = document.querySelector('.reader-container');
+
             
+
             if (!document.fullscreenElement) {
+
                 log('전체화면 시작');
+
                 if (container.requestFullscreen) {
+
                     container.requestFullscreen();
+
                 } else if (container.mozRequestFullScreen) { /* Firefox */
+
                     container.mozRequestFullScreen();
+
                 } else if (container.webkitRequestFullscreen) { /* Chrome, Safari, Opera */
+
                     container.webkitRequestFullscreen();
+
                 } else if (container.msRequestFullscreen) { /* IE/Edge */
+
                     container.msRequestFullscreen();
+
                 }
+
             } else {
+
                 log('전체화면 종료');
+
                 if (document.exitFullscreen) {
+
                     document.exitFullscreen();
+
                 } else if (document.mozCancelFullScreen) {
+
                     document.mozCancelFullScreen();
+
                 } else if (document.webkitExitFullscreen) {
+
                     document.webkitExitFullscreen();
+
                 } else if (document.msExitFullscreen) {
+
                     document.msExitFullscreen();
+
                 }
+
             }
+
         });
+
         
+
         // 키보드 이벤트 설정
+
         document.addEventListener('keyup', function(e) {
+
             if (e.key === 'ArrowLeft') onPrevPage();
+
             if (e.key === 'ArrowRight') onNextPage();
+
             if (e.key === 'Home') onFirstPage();
+
             if (e.key === 'End') onLastPage();
+
             if (e.key === '+' || e.key === '=') onZoomIn();
+
             if (e.key === '-') onZoomOut();
+
             if (e.key === '0') onZoomReset();
+
             
+
             // 키보드 이벤트 시 컨트롤 표시
+
             showControls();
+
         });
+
         
+
         // 화면 크기 변경 시 이벤트
+
         window.addEventListener('resize', debounce(handleResize, 250));
+
         
+
         // 화면 클릭 시 컨트롤 표시
+
         document.getElementById('pdf-container').addEventListener('click', function(e) {
-            showControls();
+
+            // 이미 컨트롤이 표시되어 있다면 숨김
+
+            if (controlsElement.classList.contains('visible')) {
+
+                hideControls();
+
+            } else {
+
+                showControls();
+
+            }
+
         });
+
         
+
         // 컨트롤 영역 클릭 시 이벤트 전파 방지 (컨트롤 자체 클릭시 사라지지 않게)
+
         controlsElement.addEventListener('click', function(e) {
+
             e.stopPropagation();
+
             showControls(); // 타이머 재설정
+
         });
+
         
+
         // 모바일 터치 이벤트 설정
+
         let touchStartX = 0;
+
         let touchEndX = 0;
+
         
+
         document.getElementById('pdf-container').addEventListener('touchstart', e => {
+
             touchStartX = e.changedTouches[0].screenX;
+
             showControls();
-            // 핀치 줌 관련 초기화
-            if (e.touches.length === 2) {
-                startTouchDistance = getDistance(e.touches);
-                initialScale = scale;
-                pinchCenter = getPinchCenter(e.touches, canvas);
-                initialOffsetX = offsetX;
-                initialOffsetY = offsetY;
-            }
+
         });
+
         
-        document.getElementById('pdf-container').addEventListener('touchmove', e => {
-            // 핀치 줌 처리
-            if (e.touches.length === 2 && startTouchDistance !== null) {
-                const currentDistance = getDistance(e.touches);
-                const newScale = initialScale * (currentDistance / startTouchDistance);
-                
-                // 확대/축소 제한 (옵션)
-                if (newScale > 0.5 && newScale < 3) {
-                    scale = newScale;
-                    renderPage(pageNum);
-                }
-            }
-        });
-        
+
         document.getElementById('pdf-container').addEventListener('touchend', e => {
+
             touchEndX = e.changedTouches[0].screenX;
+
             handleSwipe();
-            // 핀치 줌 관련 초기화
-            startTouchDistance = null;
-            initialScale = null;
-            pinchCenter = null;
+
         });
+
         
-        document.getElementById('pdf-container').addEventListener('touchcancel', e => {
-            // 핀치 줌 관련 초기화
-            startTouchDistance = null;
-            initialScale = null;
-            pinchCenter = null;
-        });
-        
-        function getDistance(touches) {
-            const touch1 = touches[0];
-            const touch2 = touches[1];
-            return Math.sqrt(Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2));
-        }
-        
-        function getPinchCenter(touches, canvasElement) {
-            const rect = canvasElement.getBoundingClientRect();
-            const touch1 = touches[0];
-            const touch2 = touches[1];
-            return {
-                x: ((touch1.clientX + touch2.clientX) / 2) - rect.left,
-                y: ((touch1.clientY + touch2.clientY) / 2) - rect.top
-            };
-        }
-        
+
         function handleSwipe() {
+
             const swipeThreshold = 50;
+
             
+
             if (touchStartX - touchEndX > swipeThreshold) {
+
                 onNextPage();
+
             }
+
             
+
             if (touchEndX - touchStartX > swipeThreshold) {
+
                 onPrevPage();
+
             }
+
         }
+
         
+
         // PDF 로딩 시작
+
         window.addEventListener('DOMContentLoaded', function() {
+
             log('페이지 로드 완료, PDF 로딩 시작');
+
             loadPDF();
+
         });
+
     </script>
+
 </body>
+
 </html>
