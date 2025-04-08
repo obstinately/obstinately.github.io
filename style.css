@@ -22,7 +22,7 @@ body {
     bottom: 15px; /* 하단에서의 거리 */
     left: 50%; /* 왼쪽에서 50% 지점 */
     transform: translateX(-50%); /* X축 기준 중앙 정렬 */
-    background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+    background-color: rgba(0, 0, 0, 0.65); /* 반투명 검은색 배경 (조금 더 진하게) */
     padding: 8px 15px;
     border-radius: 8px;
     display: flex;
@@ -32,16 +32,32 @@ body {
     justify-content: center;
     z-index: 10; /* 캔버스보다 위에 오도록 설정 */
 
-    opacity: 0; /* 평소에는 완전히 투명하게 */
-    visibility: hidden; /* 평소에는 숨김 (클릭 방지) */
-    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; /* 부드러운 전환 효과 */
+    /* --- 투명도 및 전환 수정 --- */
+    opacity: 0.15; /* 평소에는 더 투명하게 (데스크톱 기본) */
+    transition: opacity 0.3s ease-in-out; /* 부드러운 투명도 전환 효과 */
+    /* visibility 속성 제거 */
 }
 
-/* 뷰어 컨테이너에 마우스 올리면 컨트롤 보이기 */
-#viewer-container:hover #controls {
-    opacity: 1; /* 선명하게 표시 */
-    visibility: visible; /* 보이도록 설정 */
+/* 뷰어 컨테이너에 마우스 올리면 컨트롤 보이기 (데스크톱) */
+/* (hover: hover)는 마우스 사용 가능 환경을 의미 */
+@media (hover: hover) {
+    #viewer-container:hover #controls {
+        opacity: 1; /* 선명하게 표시 */
+    }
 }
+
+/* 터치스크린 환경 (hover 불가능) 설정 */
+@media (hover: none) {
+    #controls {
+        opacity: 0.7; /* 터치 환경에서는 항상 약간 보이도록 설정 (값 조절 가능) */
+        /* 터치에서는 hover로 opacity 변경 안 함 */
+    }
+    /* 터치 환경에서는 호버해도 투명도 변경 없도록 명시 (선택적) */
+    /* #viewer-container:hover #controls {
+        opacity: 0.7;
+    } */
+}
+
 
 #controls button {
     padding: 6px 12px;
@@ -115,12 +131,11 @@ body {
 
 #viewer-container:fullscreen #controls {
     /* 전체화면시 컨트롤 스타일 조정이 필요하면 여기에 추가 */
-    /* 예: background-color: rgba(0, 0, 0, 0.8); */
+    opacity: 0.7; /* 전체화면 시 터치 기본값과 유사하게 설정 (선택적) */
 }
 
 #viewer-container:fullscreen #canvas-container {
     /* 전체화면시 캔버스 컨테이너 조정 */
-    /* 예: 스크롤바 스타일 등 */
 }
 #viewer-container:fullscreen #pdf-canvas {
     box-shadow: none; /* 전체 화면 시 그림자 제거 */
