@@ -3,107 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>경기도 메뉴얼 2023 - 전자책 뷰어</title>
+    <title>경기도 메뉴얼 2023 - 전자책 뷰어 (오버레이)</title>
     <link rel="stylesheet" href="style.css">
     <script src="//mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
-    <style>
-        /* 기본 스타일 (style.css 파일로 분리 가능) */
-        body {
-            font-family: sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh; /* 전체 화면 높이 */
-        }
-        #viewer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            width: 100%;
-            max-width: 1000px; /* 최대 너비 설정 */
-            box-sizing: border-box;
-            height: calc(100% - 60px); /* 컨트롤 영역 제외한 높이 */
-        }
-        #controls {
-            background-color: #333;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap; /* 작은 화면에서 줄바꿈 */
-            justify-content: center;
-        }
-        #controls button {
-            padding: 5px 10px;
-            cursor: pointer;
-            background-color: #555;
-            color: white;
-            border: none;
-            border-radius: 3px;
-        }
-        #controls button:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        #controls span {
-            color: white;
-        }
-        #page-num-input {
-            width: 40px;
-            text-align: center;
-        }
-        #canvas-container {
-            width: 100%;
-            height: 100%; /* 남은 공간 채우기 */
-            overflow: auto; /* 스크롤 가능하게 */
-            background-color: #fff;
-            border: 1px solid #ccc;
-            text-align: center; /* 캔버스 가운데 정렬 */
-            position: relative; /* Fullscreen 기준 */
-        }
-        #pdf-canvas {
-            border: 1px solid black;
-            direction: ltr; /* PDF.js 렌더링 방향 */
-            display: block; /* 가운데 정렬 및 여백 제거 */
-            margin: 0 auto; /* 가운데 정렬 */
-        }
-        /* 전체 화면 시 스타일 */
-        #viewer-container:fullscreen #canvas-container {
-             width: 100vw;
-             height: 100vh;
-             overflow: auto;
-        }
-        #viewer-container:fullscreen #controls {
-             position: absolute;
-             bottom: 10px;
-             left: 50%;
-             transform: translateX(-50%);
-             z-index: 10;
-             background-color: rgba(51, 51, 51, 0.8);
-        }
-    </style>
 </head>
 <body>
     <div id="viewer-container">
+
         <div id="controls">
             <button id="prev-page" title="이전 페이지">◀</button>
             <span>페이지: <input type="number" id="page-num-input" min="1"> / <span id="page-count">0</span></span>
             <button id="next-page" title="다음 페이지">▶</button>
-            <span style="margin-left: 20px;">확대/축소:</span>
+            <span style="margin-left: 15px;">확대/축소:</span>
             <button id="zoom-out" title="축소">-</button>
             <span id="zoom-level">100%</span>
             <button id="zoom-in" title="확대">+</button>
-            <button id="fullscreen" title="전체 화면" style="margin-left: 20px;">⛶</button>
+            <button id="fullscreen" title="전체 화면" style="margin-left: 15px;">⛶</button>
         </div>
+
         <div id="canvas-container">
             <canvas id="pdf-canvas"></canvas>
         </div>
+
     </div>
 
-    <script type="module" src="script.js"></script> </body>
+    <script type="module" src="script.js"></script>
+</body>
 </html>
