@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>반응형 PDF 뷰어</title>
+    <title>반응형 PDF 뷰어2</title>
     <!-- PDF.js 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
@@ -59,13 +59,26 @@
             flex-wrap: wrap;
             gap: 10px;
             padding: 10px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-top: 1px solid #e0e0e0;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.3s, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000;
+        }
+        
+        .controls.visible {
+            opacity: 1;
+            visibility: visible;
         }
         
         .btn {
             padding: 8px 12px;
-            background-color: #4a90e2;
+            background-color: rgba(74, 144, 226, 0.9);
             border: none;
             border-radius: 5px;
             color: white;
@@ -76,11 +89,11 @@
         }
         
         .btn:hover {
-            background-color: #357ac1;
+            background-color: rgba(53, 122, 193, 0.9);
         }
         
         .btn:disabled {
-            background-color: #cccccc;
+            background-color: rgba(204, 204, 204, 0.9);
             cursor: not-allowed;
         }
         
@@ -97,11 +110,14 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #000;
         }
         
         #page-count {
             margin: 0 5px;
             white-space: nowrap;
+            color: white;
         }
         
         /* 모바일 최적화 */
@@ -109,6 +125,8 @@
             .controls {
                 flex-wrap: wrap;
                 gap: 5px;
+                padding: 8px;
+                max-width: 90%;
             }
             
             .btn {
@@ -224,6 +242,8 @@
         let loadingElement = document.getElementById('loading');
         let loadingStatus = document.getElementById('loading-status');
         let debugInfo = document.getElementById('debug-info');
+        let controlsElement = document.querySelector('.controls');
+        let controlsTimeout = null;
         
         if (debug) {
             debugInfo.style.display = 'block';
@@ -237,6 +257,28 @@
                 console.log(message);
                 debugInfo.textContent = message;
             }
+        }
+        
+        /**
+         * 컨트롤 오버레이를 표시하고 타이머를 설정합니다.
+         */
+        function showControls() {
+            controlsElement.classList.add('visible');
+            
+            // 기존 타이머 취소
+            if (controlsTimeout) {
+                clearTimeout(controlsTimeout);
+            }
+            
+            // 새 타이머 설정 (2.5초 후 숨김)
+            controlsTimeout = setTimeout(hideControls, 2500);
+        }
+        
+        /**
+         * 컨트롤 오버레이를 숨깁니다.
+         */
+        function hideControls() {
+            controlsElement.classList.remove('visible');
         }
         
         /**
@@ -276,6 +318,9 @@
                 
                 // 입력 필드 활성화
                 document.getElementById('page-input').disabled = false;
+                
+                // 초기 컨트롤 표시
+                showControls();
                 
             }).catch(function(error) {
                 console.error('PDF 로딩 중 오류 발생:', error);
@@ -372,6 +417,9 @@
                 
                 // 버튼 상태 업데이트
                 updateButtonStates();
+                
+                // 컨트롤 표시
+                showControls();
                 
             }).catch(function(error) {
                 console.error('페이지 로드 오류:', error);
@@ -545,10 +593,29 @@
             if (e.key === '+' || e.key === '=') onZoomIn();
             if (e.key === '-') onZoomOut();
             if (e.key === '0') onZoomReset();
+            
+            // 키보드 이벤트 시 컨트롤 표시
+            showControls();
         });
         
         // 화면 크기 변경 시 이벤트
         window.addEventListener('resize', debounce(handleResize, 250));
+        
+        // 화면 클릭 시 컨트롤 표시
+        document.getElementById('pdf-container').addEventListener('click', function(e) {
+            // 이미 컨트롤이 표시되어 있다면 숨김
+            if (controlsElement.classList.contains('visible')) {
+                hideControls();
+            } else {
+                showControls();
+            }
+        });
+        
+        // 컨트롤 영역 클릭 시 이벤트 전파 방지 (컨트롤 자체 클릭시 사라지지 않게)
+        controlsElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showControls(); // 타이머 재설정
+        });
         
         // 모바일 터치 이벤트 설정
         let touchStartX = 0;
@@ -556,6 +623,7 @@
         
         document.getElementById('pdf-container').addEventListener('touchstart', e => {
             touchStartX = e.changedTouches[0].screenX;
+            showControls();
         });
         
         document.getElementById('pdf-container').addEventListener('touchend', e => {
