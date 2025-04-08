@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>경기도 메뉴얼 2023 - 전자책 뷰어 (오버레이)</title>
+    <title>경기도 메뉴얼 2023 - 전자책 뷰어 (슬라이드)</title>
     <link rel="stylesheet" href="style.css">
     <script src="//mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
 </head>
 <body>
     <div id="viewer-container">
-
         <div id="controls">
             <button id="prev-page" title="이전 페이지">◀</button>
             <span>페이지: <input type="number" id="page-num-input" min="1"> / <span id="page-count">0</span></span>
@@ -22,11 +21,11 @@
         </div>
 
         <div id="canvas-container">
-            <canvas id="pdf-canvas"></canvas>
+            <canvas id="pdf-canvas-1"></canvas>
+            <canvas id="pdf-canvas-2"></canvas>
         </div>
 
     </div>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
